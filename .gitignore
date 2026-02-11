@@ -1,1 +1,70 @@
-/.lake
+# File created using '.gitignore Generator' for Visual Studio Code: https://bit.ly/vscode-gig
+# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
+# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode
+
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+!.vscode/.gitkeep
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+### VisualStudioCode Patch ###
+# Ignore all local history of files
+.history
+.ionide
+
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode
+
+# Custom rules (everything added below won't be overriden by 'Generate .gitignore File' if you use 'Update' option)
+
+### Lean 4 ###
+# Lake build artifacts
+.lake/
+build/
+
+# Lean build outputs
+*.olean
+*.ilean
+*.trace
+
+# Lake lock file (some prefer to track this, others don't - keeping it tracked by default)
+# Uncomment the next line if you want to ignore it:
+# lake-manifest.json
+
+### Beads ###
+# Beads runtime files (tracked: .beads/.gitkeep, .beads/beads.jsonl, .beads/events.jsonl)
+.beads/.jsonl.lock
+.beads/.local_version
+.beads/beads.db
+.beads/beads.db-shm
+.beads/beads.db-wal
+.beads/daemon.lock
+.beads/daemon.log
+.beads/daemon.pid
+.beads/export-state/
+.beads/sync-state.json
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+### Linux ###
+*~
+.nfs*
+
+### Windows ###
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
