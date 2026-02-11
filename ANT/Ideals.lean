@@ -7,7 +7,7 @@ abbrev R := Zsqrtd (-5)
 theorem factorization_of_two :
     span {(2 : R)} = (span {2, 1 + sqrtd}) ^ 2 := by
   apply _root_.le_antisymm
-  · 
+  · sorry
   · sorry
 
 theorem factorization_of_three :
