@@ -57,8 +57,3 @@ macro_rules
                   ⟨_, by ext ⟨⟩ <;> norm_num [Zsqrtd.sqrtd]⟩)
 
 end ANT.Tactic
-
--- CHECK
-theorem factorization_of_three :
-    span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
-  factorization_Zsqrtd_mins_5
