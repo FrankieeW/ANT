@@ -50,34 +50,12 @@ lemma in_span_of_eq
   x ∈ I :=
 by simpa [h] using hy
 
-/-!
-`factorization_setup` starts the repetitive final `le_antisymm` step.
--/
-syntax (name := factorizationSetup) "factorization_setup" : tactic
-
-macro_rules
-  | `(tactic| factorization_setup) =>
-      `(tactic|
-        refine principal_eq_of_le_of_le ?_ ?_)
 
 
 theorem factorization_of_three :
     span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
-  let J : Ideal R :=
-    span ({(3 : R) * (3 : R), (3 : R) * (1 - sqrtd), (1 + sqrtd) * (3 : R),
-      (1 + sqrtd) * (1 - sqrtd)} : Set R)
-  have hmul :
-      (span ({(3 : R), (1 + sqrtd)} : Set R) : Ideal R) *
-      (span ({(3 : R), (1 - sqrtd)} : Set R) : Ideal R) = J := by
-    simp [J, Ideal.span_pair_mul_span_pair]
-  factorization_setup
-  · rw [Ideal.span_singleton_le_iff_mem, hmul]
-    sorry
-  · rw [hmul]
-    refine Ideal.span_le.2 ?_
-    intro x hx
-    sorry
-    
+  sorry
+
 theorem factorization_of_one_plus_sqrtd :
     span {(1 + sqrtd : R)} = (span {2, 1 + sqrtd}) * (span {3, 1 + sqrtd}) := by
   sorry
