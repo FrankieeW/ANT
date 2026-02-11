@@ -33,6 +33,19 @@ theorem factorization_of_two :
     · exact Ideal.mem_span_singleton.mpr ⟨(1 + sqrtd : R), rfl⟩
     · exact Ideal.mem_span_singleton.mpr ⟨(1 + sqrtd : R), by simp [mul_comm]⟩
     · exact Ideal.mem_span_singleton.mpr ⟨(-2 + sqrtd : R), hsq⟩
+/-
+Package theorems about the factorization of ideals in `Z[√-5]` here. The main results are:
+-/
+lemma principal_eq_of_le_of_le
+  {I J : Ideal R} (h₁ : I ≤ J) (h₂ : J ≤ I) :
+  I = J :=
+le_antisymm h₁ h₂
+lemma in_span_of_eq
+  {x y : R} (h : x = y) (hy : y ∈ (I : Ideal R)) :
+  x ∈ I :=
+by simpa [h] using hy
+
+
 
 theorem factorization_of_three :
     span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
