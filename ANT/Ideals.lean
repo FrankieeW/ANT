@@ -1,4 +1,9 @@
-import Mathlib
+import ANT.Basic
+import Mathlib.NumberTheory.Zsqrtd.Basic
+import Mathlib.RingTheory.Ideal.Operations
+import Mathlib.RingTheory.Ideal.Norm.AbsNorm
+import Mathlib.Tactic.NormNum
+import Mathlib.Tactic.Ring
 
 open Ideal Zsqrtd
 
