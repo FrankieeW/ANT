@@ -26,11 +26,14 @@ theorem factorization_of_one_minus_sqrtd :
 
 theorem ideal_of_prime_norm_is_prime {R : Type*} [CommRing R] [IsDedekindDomain R]
     [Module.Free ℤ R] (I : Ideal R) (hI : I.absNorm.Prime) : I.IsPrime := by
-  -- might already be in mathlib: `Ideal.isPrime_of_irreducible_absNorm`
-  sorry
+  apply Ideal.isPrime_of_irreducible_absNorm
+  exact hI
 
 theorem isPrime_span_two_one_plus_sqrtd :
     IsPrime (span {2, 1 + sqrtd} : Ideal R) := by
+  -- Strategy: Show absNorm = 2 (prime), then use ideal_of_prime_norm_is_prime
+  -- apply ideal_of_prime_norm_is_prime
+  -- Need to show: (span {2, 1 + sqrtd}).absNorm.Prime
   sorry
 
 theorem isPrime_span_three_one_plus_sqrtd :
