@@ -1,11 +1,12 @@
 import ANT.Basic
+import ANT.Tactic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.RingTheory.Ideal.Operations
 import Mathlib.RingTheory.Ideal.Norm.AbsNorm
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
 
-open Ideal Zsqrtd
+open Ideal Zsqrtd ANT.Tactic
 
 abbrev R := Zsqrtd (-5)
 
@@ -54,8 +55,18 @@ by simpa [h] using hy
 
 theorem factorization_of_three :
     span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
-  sorry
+  -- factorization_Zsqrtd_mins_5
+    sorry
+/-
+error
+(deterministic) timeout at `isDefEq`, maximum number of heartbeats (200000) has been reached
 
+Note: Use `set_option maxHeartbeats <num>` to set the limit.
+
+Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
+
+Frankie: Inproving the tactic to avoid this timeout is possible, but it may be more efficient to provide a manual proof for this specific case, as the tactic is designed to handle a wide range of cases and may not be optimized for this particular one. The manual proof would involve explicitly calculating the products and showing the necessary inclusions, which can be done using the properties of ideals and the specific elements involved.
+-/
 theorem factorization_of_one_plus_sqrtd :
     span {(1 + sqrtd : R)} = (span {2, 1 + sqrtd}) * (span {3, 1 + sqrtd}) := by
   sorry
