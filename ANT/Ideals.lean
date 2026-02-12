@@ -39,9 +39,7 @@ theorem factorization_of_two :
     · exact Ideal.mem_span_singleton.mpr ⟨(1 + sqrtd : R), rfl⟩
     · exact Ideal.mem_span_singleton.mpr ⟨(1 + sqrtd : R), by simp [mul_comm]⟩
     · exact Ideal.mem_span_singleton.mpr ⟨(-2 + sqrtd : R), hsq⟩
-/-
-Package theorems about the factorization of ideals in `Z[√-5]` here. The main results are:
--/
+
 lemma principal_eq_of_le_of_le
   {I J : Ideal R} (h₁ : I ≤ J) (h₂ : J ≤ I) :
   I = J :=
@@ -51,29 +49,76 @@ lemma in_span_of_eq
   x ∈ I :=
 by simpa [h] using hy
 
+/-- If `a` divides every element of `S`, then `span S ≤ span {a}`. -/
+lemma span_le_span_singleton_of_forall_dvd
+    {α : Type*} [CommSemiring α] {a : α} {S : Set α}
+    (h : ∀ x ∈ S, a ∣ x) :
+    span S ≤ span {a} :=
+  Ideal.span_le.2 fun x hx => Ideal.mem_span_singleton.mpr (h x hx)
 
 
 theorem factorization_of_three :
     span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
-  -- factorization_Zsqrtd_mins_5
-    sorry
-/-
-error
-(deterministic) timeout at `isDefEq`, maximum number of heartbeats (200000) has been reached
+    rw [Ideal.span_pair_mul_span_pair]
+    apply principal_eq_of_le_of_le
+    · rw [Ideal.span_singleton_le_iff_mem]
+      -- linear_combination
+      have three_eq: (3 : R) = 3 * 3 - (1 + sqrtd) * (1 - sqrtd) := by
+        ext <;> norm_num [Zsqrtd.sqrtd]
+      exact in_span_of_eq three_eq
+        ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
+    · apply span_le_span_singleton_of_forall_dvd
+      intro x hx
+      -- rw [← Ideal.mem_span_singleton]
+      rcases hx with rfl  | rfl | rfl | rfl
+      · simp
+      · simp
+      · simp
+      · exact ⟨2, by ext <;> norm_num [Zsqrtd.sqrtd]⟩
 
-Note: Use `set_option maxHeartbeats <num>` to set the limit.
 
-Hint: Additional diagnostic information may be available using the `set_option diagnostics true` command.
 
-Frankie: Inproving the tactic to avoid this timeout is possible, but it may be more efficient to provide a manual proof for this specific case, as the tactic is designed to handle a wide range of cases and may not be optimized for this particular one. The manual proof would involve explicitly calculating the products and showing the necessary inclusions, which can be done using the properties of ideals and the specific elements involved.
--/
 theorem factorization_of_one_plus_sqrtd :
     span {(1 + sqrtd : R)} = (span {2, 1 + sqrtd}) * (span {3, 1 + sqrtd}) := by
-  sorry
+  rw [Ideal.span_pair_mul_span_pair]
+  apply principal_eq_of_le_of_le
+  · rw [Ideal.span_singleton_le_iff_mem]
+    -- 1 + sqrtd = 0 * (2*3) + (-1) * (2*(1+sqrtd)) + 1 * ((1+sqrtd)*3) + 0 * ((1+sqrtd)*(1+sqrtd))
+    have one_plus_sqrtd_eq :
+        (1 + sqrtd : R) = (1 + sqrtd) * 3 - 2 * (1 + sqrtd) := by ring
+    exact in_span_of_eq one_plus_sqrtd_eq
+      ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
+  · apply span_le_span_singleton_of_forall_dvd
+    intro x hx
+    rcases hx with rfl | rfl | rfl | rfl
+    · -- 2 * 3 = 6 = (1 + sqrtd) * (1 - sqrtd)
+      exact ⟨1 - sqrtd, by ext <;> norm_num [Zsqrtd.sqrtd]⟩
+    · -- 2 * (1 + sqrtd) = (1 + sqrtd) * 2
+      -- exact ⟨2, by ring⟩
+      simp
+    · -- (1 + sqrtd) * 3
+      -- exact ⟨3, by ring⟩
+      simp
+    · -- (1 + sqrtd) * (1 + sqrtd)
+      -- exact ⟨1 + sqrtd, rfl⟩
+      simp
 
 theorem factorization_of_one_minus_sqrtd :
-    span {(1 - sqrtd : R)} = (span {2, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
-  sorry
+    span {(1 - sqrtd : R)} = (span {2, 1 - sqrtd}) * (span {3, 1 - sqrtd}) := by
+  rw [Ideal.span_pair_mul_span_pair]
+  apply principal_eq_of_le_of_le
+  · rw [Ideal.span_singleton_le_iff_mem]
+    have one_mins_sqrtd_eq :
+        (1 - sqrtd : R) = (1 - sqrtd) * 3 - 2 * (1 - sqrtd) := by ring
+    exact in_span_of_eq one_mins_sqrtd_eq
+      ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
+  · apply span_le_span_singleton_of_forall_dvd
+    intro x hx
+    rcases hx with rfl | rfl | rfl | rfl
+    · exact ⟨1 + sqrtd, by ext <;> norm_num [Zsqrtd.sqrtd]⟩
+    · simp
+    · simp
+    · simp
 
 -- for these: maybe use `N(I) = #(R/I)`, and show in general that an ideal of prime norm is prime
 
