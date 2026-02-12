@@ -127,17 +127,133 @@ theorem ideal_of_prime_norm_is_prime {R : Type*} [CommRing R] [IsDedekindDomain 
   apply Ideal.isPrime_of_irreducible_absNorm
   exact hI
 
+/-- An element of ℤ[√-5] belongs to span {2, 1 + √(-5)} iff re + im is even. -/
+private lemma mem_span_two_one_plus_sqrtd_iff (z : R) :
+    z ∈ (span ({2, 1 + sqrtd} : Set R) : Ideal R) ↔ Even (z.re + z.im) := by
+  constructor
+  · intro hz
+    rw [Ideal.mem_span_pair] at hz
+    obtain ⟨a, b, hab⟩ := hz
+    have hre := congr_arg Zsqrtd.re hab
+    have him := congr_arg Zsqrtd.im hab
+    simp only [Zsqrtd.re_add, Zsqrtd.re_mul, Zsqrtd.im_add, Zsqrtd.im_mul,
+               Zsqrtd.sqrtd] at hre him
+    -- Simplify concrete values: re 2 = 2, im 2 = 0, re 1 = 1, im 1 = 0
+    norm_num at hre him
+    exact ⟨a.re + a.im + b.re - 2 * b.im, by linarith⟩
+  · intro ⟨k, hk⟩
+    rw [Ideal.mem_span_pair]
+    refine ⟨⟨k - z.im, 0⟩, ⟨z.im, 0⟩, ?_⟩
+    ext
+    · simp [Zsqrtd.sqrtd]; linarith
+    · simp [Zsqrtd.sqrtd]
+
+-- set_option maxHeartbeats 800000 in
 theorem isPrime_span_two_one_plus_sqrtd :
     IsPrime (span {2, 1 + sqrtd} : Ideal R) := by
-  -- Strategy: Show absNorm = 2 (prime), then use ideal_of_prime_norm_is_prime
-  -- apply ideal_of_prime_norm_is_prime
-  -- Need to show: (span {2, 1 + sqrtd}).absNorm.Prime
-  sorry
+  rw [Ideal.isPrime_iff]
+  refine ⟨?_, ?_⟩
+  · -- Show I ≠ ⊤: 1 ∉ I since 1.re + 1.im = 1 is odd
+    intro h
+    have h1 : (1 : R) ∈ (span ({2, 1 + sqrtd} : Set R) : Ideal R) := by rw [h]; trivial
+    rw [mem_span_two_one_plus_sqrtd_iff] at h1
+    simp at h1
+  · -- Show ∀ a b, a * b ∈ I → a ∈ I ∨ b ∈ I
+    intro a b hab
+    simp only [mem_span_two_one_plus_sqrtd_iff] at hab ⊢
+    -- Key identity: (a*b).re + (a*b).im = (a.re+a.im)*(b.re+b.im) - 6*a.im*b.im
+    have key : (a * b).re + (a * b).im =
+        (a.re + a.im) * (b.re + b.im) - 6 * a.im * b.im := by
+      simp only [Zsqrtd.re_mul, Zsqrtd.im_mul]; ring
+    rw [key] at hab
+    have h6 : Even (6 * a.im * b.im) := ⟨3 * a.im * b.im, by ring⟩
+    have hprod : Even ((a.re + a.im) * (b.re + b.im)) := by
+      obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
+      exact ⟨k1 + k2, by linarith⟩
+    exact Int.even_mul.mp hprod
+
+/-- An element of ℤ[√-5] belongs to span {3, 1 + √(-5)} iff 3 divides re - im. -/
+private lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
+    z ∈ (span ({3, 1 + sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re - z.im) := by
+  constructor
+  · intro hz
+    rw [Ideal.mem_span_pair] at hz
+    obtain ⟨a, b, hab⟩ := hz
+    have hre := congr_arg Zsqrtd.re hab
+    have him := congr_arg Zsqrtd.im hab
+    simp only [Zsqrtd.re_add, Zsqrtd.re_mul, Zsqrtd.im_add, Zsqrtd.im_mul,
+               Zsqrtd.sqrtd] at hre him
+    norm_num at hre him
+    exact ⟨a.re - a.im - 2 * b.im, by linarith⟩
+  · intro ⟨k, hk⟩
+    rw [Ideal.mem_span_pair]
+    refine ⟨⟨k, 0⟩, ⟨z.im, 0⟩, ?_⟩
+    ext
+    · simp [Zsqrtd.sqrtd]; linarith
+    · simp [Zsqrtd.sqrtd]
 
 theorem isPrime_span_three_one_plus_sqrtd :
     IsPrime (span {3, 1 + sqrtd} : Ideal R) := by
-  sorry
+  rw [Ideal.isPrime_iff]
+  refine ⟨?_, ?_⟩
+  · -- Show I ≠ ⊤: 1 ∉ I since 3 ∤ 1.re - 1.im = 1
+    intro h
+    have h1 : (1 : R) ∈ (span ({3, 1 + sqrtd} : Set R) : Ideal R) := by rw [h]; trivial
+    rw [mem_span_three_one_plus_sqrtd_idx] at h1
+    norm_num at h1
+  · -- Show ∀ a b, a * b ∈ I → a ∈ I ∨ b ∈ I
+    intro a b hab
+    simp only [mem_span_three_one_plus_sqrtd_idx] at hab ⊢
+    -- Key identity: (a*b).re - (a*b).im = (a.re-a.im)*(b.re-b.im) - 6*a.im*b.im
+    have key : (a * b).re - (a * b).im =
+        (a.re - a.im) * (b.re - b.im) - 6 * a.im * b.im := by
+      simp only [Zsqrtd.re_mul, Zsqrtd.im_mul]; ring
+    rw [key] at hab
+    have h6 : (3 : ℤ) ∣ 6 * a.im * b.im := ⟨2 * a.im * b.im, by ring⟩
+    have hprod : (3 : ℤ) ∣ (a.re - a.im) * (b.re - b.im) := by
+      obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
+      exact ⟨k1 + k2, by linarith⟩
+    exact (show Prime (3 : ℤ) by norm_num).dvd_or_dvd hprod
 
-theorem isPrime_span_three_minus_plus_sqrtd :
+/-- An element of ℤ[√-5] belongs to span {3, 1 - √(-5)} iff 3 divides re + im. -/
+private lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
+    z ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re + z.im) := by
+  constructor
+  · intro hz
+    rw [Ideal.mem_span_pair] at hz
+    obtain ⟨a, b, hab⟩ := hz
+    have hre := congr_arg Zsqrtd.re hab
+    have him := congr_arg Zsqrtd.im hab
+    simp only [Zsqrtd.re_add, Zsqrtd.re_mul, Zsqrtd.im_add, Zsqrtd.im_mul,
+               Zsqrtd.sqrtd] at hre him
+    norm_num at hre him
+    exact ⟨a.re + a.im + 2 * b.im, by linarith⟩
+  · intro ⟨k, hk⟩
+    rw [Ideal.mem_span_pair]
+    refine ⟨⟨k - 2 * z.im, 0⟩, ⟨0, z.im⟩, ?_⟩
+    ext
+    · simp [Zsqrtd.sqrtd]; linarith
+    · simp [Zsqrtd.sqrtd]
+
+theorem isPrime_span_three_one_minus_sqrtd :
     IsPrime (span {3, 1 - sqrtd} : Ideal R) := by
-  sorry
+  rw [Ideal.isPrime_iff]
+  refine ⟨?_, ?_⟩
+  · -- Show I ≠ ⊤: 1 ∉ I since 3 ∤ 1.re + 1.im = 2
+    intro h
+    have h1 : (1 : R) ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) := by rw [h]; trivial
+    rw [mem_span_three_one_minus_sqrtd_idx] at h1
+    norm_num at h1
+  · -- Show ∀ a b, a * b ∈ I → a ∈ I ∨ b ∈ I
+    intro a b hab
+    simp only [mem_span_three_one_minus_sqrtd_idx] at hab ⊢
+    -- Key identity: (a*b).re + (a*b).im = (a.re+a.im)*(b.re+b.im) - 6*a.im*b.im
+    have key : (a * b).re + (a * b).im =
+        (a.re + a.im) * (b.re + b.im) - 6 * a.im * b.im := by
+      simp only [Zsqrtd.re_mul, Zsqrtd.im_mul]; ring
+    rw [key] at hab
+    have h6 : (3 : ℤ) ∣ 6 * a.im * b.im := ⟨2 * a.im * b.im, by ring⟩
+    have hprod : (3 : ℤ) ∣ (a.re + a.im) * (b.re + b.im) := by
+      obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
+      exact ⟨k1 + k2, by linarith⟩
+    exact (show Prime (3 : ℤ) by norm_num).dvd_or_dvd hprod
