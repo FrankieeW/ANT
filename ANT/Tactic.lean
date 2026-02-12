@@ -1,0 +1,123 @@
+import Mathlib
+
+open Ideal Zsqrtd
+
+set_option linter.style.whitespace false
+
+namespace ANT.Tactic
+
+private abbrev R := Zsqrtd (-5)
+
+/-- Close an equality goal by `ring`, or by `ext <;> norm_num` when `ring` fails
+    (e.g. when `sqrtd` is involved). -/
+scoped macro "try_eq " h:term : tactic =>
+  `(tactic| (convert ($h) using 1; first | ring | (ext <;> norm_num [Zsqrtd.sqrtd])))
+
+/-- Close a `Zsqrtd` equality by trying `ring` first, then `ext <;> norm_num`. -/
+scoped macro "zsqrtd_eq" : tactic =>
+  `(tactic| first | ring | (ext <;> norm_num [Zsqrtd.sqrtd]))
+
+/-- Given that generators `g₁, g₂, g₃, g₄` all belong to ideal `J`,
+    prove the current goal is in `J` by showing it equals a linear combination
+    `c₁ * g₁ + c₂ * g₂ + c₃ * g₃ + c₄ * g₄` using `Ideal.add_mem` and `Ideal.mul_mem_left`.
+
+    This version avoids the existential quantifier pattern (which caused expensive
+    metavariable unification) and instead uses `convert` + `zsqrtd_eq` to close
+    the remaining equality goal directly. -/
+
+scoped macro "show_mem_by_lincomb " J:ident
+    hg1:ident hg2:ident hg3:ident hg4:ident : tactic =>
+  `(tactic| (
+    refine show _ ∈ $J from ?_
+    -- Express the element as c₁ * g₁ + c₂ * g₂ + c₃ * g₃ + c₄ * g₄
+    -- and close via add_mem / mul_mem_left
+    suffices h : ∃ c₁ c₂ c₃ c₄ : R,
+        _ = c₁ * _ + c₂ * _ + c₃ * _ + c₄ * _ from by
+      obtain ⟨c₁, c₂, c₃, c₄, hc⟩ := h
+      rw [show _ = c₁ * _ + c₂ * _ + c₃ * _ + c₄ * _ from hc]
+      exact Ideal.add_mem $J (Ideal.add_mem $J (Ideal.add_mem $J
+        (Ideal.mul_mem_left $J c₁ $hg1)
+        (Ideal.mul_mem_left $J c₂ $hg2))
+        (Ideal.mul_mem_left $J c₃ $hg3))
+        (Ideal.mul_mem_left $J c₄ $hg4)
+    exact ⟨_, _, _, _, by zsqrtd_eq⟩
+  ))
+
+/-- Helper: prove that each element `x ∈ {g₁, g₂, g₃, g₄}` belongs to `span {p}`.
+    Dispatches each case to `ring` or `ext <;> norm_num`. -/
+
+scoped macro "close_reverse_inclusion" : tactic =>
+  `(tactic| (
+    intro x hx
+    rcases hx with rfl | rfl | rfl | rfl
+    <;> (first
+      | exact Ideal.mem_span_singleton.mpr ⟨_, by ring⟩
+      | exact Ideal.mem_span_singleton.mpr
+          ⟨_, by ext ⟨⟩ <;> norm_num [Zsqrtd.sqrtd]⟩)
+  ))
+
+/-- The `factorization_Zsqrtd_mins_5` tactic proves ideal factorization identities
+    in `ℤ[√-5]` of two forms:
+
+    1. **Product**: `⟨p⟩ = ⟨a₁, a₂⟩ · ⟨b₁, b₂⟩`
+    2. **Squared**: `⟨p⟩ = ⟨a₁, a₂⟩²`
+
+    The proof proceeds by `le_antisymm`:
+    - *Forward*: show `p` belongs to the RHS by writing it as a linear combination
+      of the four products `aᵢ * bⱼ` (or `aᵢ * aⱼ`).
+    - *Reverse*: show each generator product belongs to `⟨p⟩`.
+
+    **Performance notes:**
+    - Uses `set_option maxHeartbeats 400000` to handle complex `norm_num` evaluations.
+    - The `show_mem_by_lincomb` helper avoids deep metavariable unification by
+      deferring the linear-combination equality to a single `zsqrtd_eq` call. -/
+syntax (name := factorizationZsqrtdMins5) "factorization_Zsqrtd_mins_5" : tactic
+
+set_option maxHeartbeats 400000 in
+macro_rules
+  | `(tactic| factorization_Zsqrtd_mins_5) =>
+      `(tactic|
+        first
+        | -- Product case: span {p} = span {a1, a2} * span {b1, b2}
+          refine
+            (show span {(?p : R)} =
+                (span ({?a1, ?a2} : Set R) : Ideal R) *
+                (span ({?b1, ?b2} : Set R) : Ideal R) from ?_)
+          let J : Ideal R :=
+            span ({?a1 * ?b1, ?a1 * ?b2, ?a2 * ?b1, ?a2 * ?b2} : Set R)
+          have hmul :
+              (span ({?a1, ?a2} : Set R) : Ideal R) *
+              (span ({?b1, ?b2} : Set R) : Ideal R) = J := by
+            simp only [J, Ideal.span_pair_mul_span_pair]
+          apply _root_.le_antisymm
+          · rw [Ideal.span_singleton_le_iff_mem, hmul]
+            have hg1 : ?a1 * ?b1 ∈ J := Ideal.subset_span (by simp)
+            have hg2 : ?a1 * ?b2 ∈ J := Ideal.subset_span (by simp)
+            have hg3 : ?a2 * ?b1 ∈ J := Ideal.subset_span (by simp)
+            have hg4 : ?a2 * ?b2 ∈ J := Ideal.subset_span (by simp)
+            show_mem_by_lincomb J hg1 hg2 hg3 hg4
+          · rw [hmul]
+            refine Ideal.span_le.2 ?_
+            close_reverse_inclusion
+        | -- Squared case: span {p} = span {a1, a2} ^ 2
+          refine
+            (show span {(?p : R)} =
+                (span ({?a1, ?a2} : Set R) : Ideal R) ^ 2 from ?_)
+          let I : Ideal R := (span ({?a1, ?a2} : Set R) : Ideal R)
+          let J : Ideal R :=
+            span ({?a1 * ?a1, ?a1 * ?a2, ?a2 * ?a1, ?a2 * ?a2} : Set R)
+          have hpow : I ^ 2 = I * I := pow_two I
+          have hmul : I * I = J := by
+            simp only [I, J, Ideal.span_pair_mul_span_pair]
+          apply _root_.le_antisymm
+          · rw [Ideal.span_singleton_le_iff_mem, hpow, hmul]
+            have hg1 : ?a1 * ?a1 ∈ J := Ideal.subset_span (by simp)
+            have hg2 : ?a1 * ?a2 ∈ J := Ideal.subset_span (by simp)
+            have hg3 : ?a2 * ?a1 ∈ J := Ideal.subset_span (by simp)
+            have hg4 : ?a2 * ?a2 ∈ J := Ideal.subset_span (by simp)
+            show_mem_by_lincomb J hg1 hg2 hg3 hg4
+          · rw [hpow, hmul]
+            refine Ideal.span_le.2 ?_
+            close_reverse_inclusion)
+
+end ANT.Tactic
