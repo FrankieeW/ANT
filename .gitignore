@@ -70,3 +70,6 @@ Desktop.ini
 
 #AI generated files
 .sisyphus/
+
+### Git worktrees ###
+.worktrees/
