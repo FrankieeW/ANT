@@ -1,13 +1,14 @@
 import ANT.Basic
-import ANT.Tactic
+-- import ANT.Tactic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.RingTheory.Ideal.Operations
 import Mathlib.RingTheory.Ideal.Norm.AbsNorm
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
 
-open Ideal Zsqrtd ANT.Tactic
+open Ideal Zsqrtd
 
+/-- The working quadratic integer ring `ℤ[√-5]` used in this file. -/
 abbrev R := Zsqrtd (-5)
 
 theorem factorization_of_two :
@@ -148,7 +149,7 @@ private lemma mem_span_two_one_plus_sqrtd_iff (z : R) :
     · simp [Zsqrtd.sqrtd]; linarith
     · simp [Zsqrtd.sqrtd]
 
--- set_option maxHeartbeats 800000 in
+
 theorem isPrime_span_two_one_plus_sqrtd :
     IsPrime (span {2, 1 + sqrtd} : Ideal R) := by
   rw [Ideal.isPrime_iff]
@@ -213,7 +214,9 @@ theorem isPrime_span_three_one_plus_sqrtd :
     have hprod : (3 : ℤ) ∣ (a.re - a.im) * (b.re - b.im) := by
       obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
       exact ⟨k1 + k2, by linarith⟩
-    exact (show Prime (3 : ℤ) by norm_num).dvd_or_dvd hprod
+    have h3 : Prime (3 : ℤ) := by
+      exact Int.prime_iff_natAbs_prime.2 (by decide)
+    exact h3.dvd_or_dvd hprod
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 - √(-5)} iff 3 divides re + im. -/
 private lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
@@ -256,4 +259,8 @@ theorem isPrime_span_three_one_minus_sqrtd :
     have hprod : (3 : ℤ) ∣ (a.re + a.im) * (b.re + b.im) := by
       obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
       exact ⟨k1 + k2, by linarith⟩
-    exact (show Prime (3 : ℤ) by norm_num).dvd_or_dvd hprod
+    have h3 : Prime (3 : ℤ) := by
+      exact Int.prime_iff_natAbs_prime.2 (by decide)
+    exact h3.dvd_or_dvd hprod
+
+#lint
