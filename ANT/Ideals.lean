@@ -1,10 +1,12 @@
 import ANT.Basic
--- import ANT.Tactic
 import Mathlib.NumberTheory.Zsqrtd.Basic
 import Mathlib.RingTheory.Ideal.Operations
 import Mathlib.RingTheory.Ideal.Norm.AbsNorm
+import Mathlib.RingTheory.Ideal.Maps
 import Mathlib.Tactic.NormNum
 import Mathlib.Tactic.Ring
+import Mathlib.Data.ZMod.Basic
+import Mathlib.Algebra.Field.ZMod
 
 open Ideal Zsqrtd
 
@@ -74,14 +76,18 @@ theorem factorization_of_three :
     span {(3 : R)} = (span {3, 1 + sqrtd}) * (span {3, 1 - sqrtd}) := by
     -- Expand the ideal product into the span of four pairwise products
     rw [Ideal.span_pair_mul_span_pair]
-    apply principal_eq_of_le_of_le
+    apply @_root_.le_antisymm
+    -- apply le_antisymm
     · -- Forward inclusion ⟨3⟩ ⊆ product: 3 = 3·3 - (1+√-5)(1-√-5)
       --   since (1+√-5)(1-√-5) = 1-(-5) = 6, we get 9 - 6 = 3
       rw [Ideal.span_singleton_le_iff_mem]
       have three_eq: (3 : R) = 3 * 3 - (1 + sqrtd) * (1 - sqrtd) := by
         ext <;> norm_num [Zsqrtd.sqrtd]
-      exact in_span_of_eq three_eq
-        ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
+      -- rw [three_eq]
+      conv_rhs => rw [three_eq]
+      exact (span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp))
+      -- exact in_span_of_eq three_eq
+      --   ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
     · -- Reverse inclusion: each of the four generators is divisible by 3
       apply span_le_span_singleton_of_forall_dvd
       intro x hx
@@ -203,6 +209,83 @@ theorem isPrime_span_two_one_plus_sqrtd :
       exact ⟨k1 + k2, by linarith⟩
     -- An even product implies at least one even factor (since 2 is prime)
     exact Int.even_mul.mp hprod
+/-! ## Norm-based primality proofs
+
+Alternative approach: construct a surjective ring homomorphism `R →+* ZMod p` via
+`Zsqrtd.lift`, identify its kernel with the ideal, and conclude maximality (hence
+primality) from `RingHom.ker_isMaximal_of_surjective`.
+
+The key observation is that `(-5 : ℤ)` is a square modulo both 2 and 3:
+- mod 2: `1² = 1 ≡ -5`, so `√-5 ↦ 1` gives `R →+* ZMod 2`
+- mod 3: `(-1)² = 1 ≡ -5`, so `√-5 ↦ -1` gives `R →+* ZMod 3` (for ⟨3,1+√-5⟩)
+- mod 3: `1² = 1 ≡ -5`, so `√-5 ↦ 1` gives `R →+* ZMod 3` (for ⟨3,1-√-5⟩)
+
+Since `ZMod p` is a field for prime `p`, the kernel is maximal, hence prime.
+The ideal norm equals `p` = |R/I|, confirming these are prime ideals of norm 2 or 3.
+-/
+
+instance : Fact (Nat.Prime 2) := Fact.mk (by decide)
+instance : Fact (Nat.Prime 3) := Fact.mk (by decide)
+
+/-- Ring homomorphism `R → ZMod 2` sending `√-5 ↦ 1`, well-defined since `1² ≡ -5 (mod 2)`. -/
+noncomputable def toZMod2 : R →+* ZMod 2 :=
+  Zsqrtd.lift ⟨1, by decide⟩
+
+private lemma toZMod2_ker_iff (z : R) :
+    toZMod2 z = 0 ↔ Even (z.re + z.im) := by
+  simp only [toZMod2, Zsqrtd.lift_apply_apply, mul_one]
+  rw [← Int.cast_add, ZMod.intCast_zmod_eq_zero_iff_dvd]
+  simp only [Even, Nat.cast_ofNat]
+  constructor
+  · rintro ⟨k, hk⟩; exact ⟨k, by linarith⟩
+  · rintro ⟨k, hk⟩; exact ⟨k, by linarith⟩
+
+private lemma ker_toZMod2_eq :
+    RingHom.ker toZMod2 = span ({2, 1 + sqrtd} : Set R) := by
+  ext z; rw [RingHom.mem_ker, toZMod2_ker_iff, mem_span_two_one_plus_sqrtd_iff]
+
+private lemma toZMod2_surjective : Function.Surjective toZMod2 := by
+  intro y; fin_cases y
+  · exact ⟨0, map_zero _⟩
+  · exact ⟨1, map_one _⟩
+
+/-- Primality of `⟨2, 1+√-5⟩` via quotient: `R/I ≅ ZMod 2` is a field. -/
+theorem isPrime_span_two_one_plus_sqrtd' :
+    IsPrime (span {2, 1 + sqrtd} : Ideal R) := by
+  rw [← ker_toZMod2_eq]
+  exact (RingHom.ker_isMaximal_of_surjective toZMod2 toZMod2_surjective).isPrime
+
+/-- Ring homomorphism `R → ZMod 3` sending `√-5 ↦ -1`, well-defined since `(-1)² ≡ -5 (mod 3)`. -/
+noncomputable def toZMod3Plus : R →+* ZMod 3 :=
+  Zsqrtd.lift ⟨-1, by decide⟩
+
+private lemma toZMod3Plus_ker_iff (z : R) :
+    toZMod3Plus z = 0 ↔ (3 : ℤ) ∣ (z.re - z.im) := by
+  simp only [toZMod3Plus, Zsqrtd.lift_apply_apply, mul_neg, mul_one]
+  rw [← sub_eq_add_neg, ← Int.cast_sub, ZMod.intCast_zmod_eq_zero_iff_dvd]
+  simp only [Nat.cast_ofNat]
+
+/-- Ring homomorphism `R → ZMod 3` sending `√-5 ↦ 1`, well-defined since `1² ≡ -5 (mod 3)`. -/
+noncomputable def toZMod3Minus : R →+* ZMod 3 :=
+  Zsqrtd.lift ⟨1, by decide⟩
+
+private lemma toZMod3Minus_ker_iff (z : R) :
+    toZMod3Minus z = 0 ↔ (3 : ℤ) ∣ (z.re + z.im) := by
+  simp only [toZMod3Minus, Zsqrtd.lift_apply_apply, mul_one]
+  rw [← Int.cast_add, ZMod.intCast_zmod_eq_zero_iff_dvd]
+  simp only [Nat.cast_ofNat]
+
+private lemma toZMod3Plus_surjective : Function.Surjective toZMod3Plus := by
+  intro y; fin_cases y
+  · exact ⟨0, map_zero _⟩
+  · exact ⟨1, map_one _⟩
+  · exact ⟨-1, by simp only [Int.reduceNeg, map_neg, map_one]; decide⟩
+
+private lemma toZMod3Minus_surjective : Function.Surjective toZMod3Minus := by
+  intro y; fin_cases y
+  · exact ⟨0, map_zero _⟩
+  · exact ⟨1, map_one _⟩
+  · exact ⟨-1, by simp only [Int.reduceNeg, map_neg, map_one]; decide⟩
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 + √(-5)} iff 3 divides re - im. -/
 private lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
@@ -258,6 +341,14 @@ theorem isPrime_span_three_one_plus_sqrtd :
       exact Int.prime_iff_natAbs_prime.2 (by decide)
     exact h3.dvd_or_dvd hprod
 
+/-- Primality of `⟨3, 1+√-5⟩` via quotient: `R/I ≅ ZMod 3` is a field. -/
+theorem isPrime_span_three_one_plus_sqrtd' :
+    IsPrime (span {3, 1 + sqrtd} : Ideal R) := by
+  have hker : RingHom.ker toZMod3Plus = span ({3, 1 + sqrtd} : Set R) := by
+    ext z; rw [RingHom.mem_ker, toZMod3Plus_ker_iff, mem_span_three_one_plus_sqrtd_idx]
+  rw [← hker]
+  exact (RingHom.ker_isMaximal_of_surjective toZMod3Plus toZMod3Plus_surjective).isPrime
+
 /-- An element of ℤ[√-5] belongs to span {3, 1 - √(-5)} iff 3 divides re + im. -/
 private lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
     z ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re + z.im) := by
@@ -311,5 +402,13 @@ theorem isPrime_span_three_one_minus_sqrtd :
     have h3 : Prime (3 : ℤ) := by
       exact Int.prime_iff_natAbs_prime.2 (by decide)
     exact h3.dvd_or_dvd hprod
+
+/-- Primality of `⟨3, 1-√-5⟩` via quotient: `R/I ≅ ZMod 3` is a field. -/
+theorem isPrime_span_three_one_minus_sqrtd' :
+    IsPrime (span {3, 1 - sqrtd} : Ideal R) := by
+  have hker : RingHom.ker toZMod3Minus = span ({3, 1 - sqrtd} : Set R) := by
+    ext z; rw [RingHom.mem_ker, toZMod3Minus_ker_iff, mem_span_three_one_minus_sqrtd_idx]
+  rw [← hker]
+  exact (RingHom.ker_isMaximal_of_surjective toZMod3Minus toZMod3Minus_surjective).isPrime
 
 #lint
