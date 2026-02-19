@@ -77,17 +77,13 @@ theorem factorization_of_three :
     -- Expand the ideal product into the span of four pairwise products
     rw [Ideal.span_pair_mul_span_pair]
     apply @_root_.le_antisymm
-    -- apply le_antisymm
     · -- Forward inclusion ⟨3⟩ ⊆ product: 3 = 3·3 - (1+√-5)(1-√-5)
       --   since (1+√-5)(1-√-5) = 1-(-5) = 6, we get 9 - 6 = 3
       rw [Ideal.span_singleton_le_iff_mem]
       have three_eq: (3 : R) = 3 * 3 - (1 + sqrtd) * (1 - sqrtd) := by
         ext <;> norm_num [Zsqrtd.sqrtd]
-      -- rw [three_eq]
       conv_rhs => rw [three_eq]
       exact (span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp))
-      -- exact in_span_of_eq three_eq
-      --   ((span _).sub_mem (Ideal.subset_span (by simp)) (Ideal.subset_span (by simp)))
     · -- Reverse inclusion: each of the four generators is divisible by 3
       apply span_le_span_singleton_of_forall_dvd
       intro x hx
@@ -288,7 +284,7 @@ private lemma toZMod3Minus_surjective : Function.Surjective toZMod3Minus := by
   · exact ⟨-1, by simp only [Int.reduceNeg, map_neg, map_one]; decide⟩
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 + √(-5)} iff 3 divides re - im. -/
-private lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
+private lemma mem_span_three_one_plus_sqrtd_iff (z : R) :
     z ∈ (span ({3, 1 + sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re - z.im) := by
   constructor
   · -- (⇒) If z = a·3 + b·(1+√-5), extract coordinate equations and show 3 | (re - im)
@@ -310,6 +306,9 @@ private lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
     · simp [Zsqrtd.sqrtd]; linarith
     · simp [Zsqrtd.sqrtd]
 
+private lemma int_prime_three : Prime (3 : ℤ) :=
+  Int.prime_iff_natAbs_prime.2 (by decide)
+
 theorem isPrime_span_three_one_plus_sqrtd :
     IsPrime (span {3, 1 + sqrtd} : Ideal R) := by
   -- Strategy: use the membership criterion z ∈ I ↔ 3 | (re - im) to reduce
@@ -319,12 +318,12 @@ theorem isPrime_span_three_one_plus_sqrtd :
   · -- Show I ≠ ⊤: 1 ∉ I since 3 ∤ 1.re - 1.im = 1
     intro h
     have h1 : (1 : R) ∈ (span ({3, 1 + sqrtd} : Set R) : Ideal R) := by rw [h]; trivial
-    rw [mem_span_three_one_plus_sqrtd_idx] at h1
+    rw [mem_span_three_one_plus_sqrtd_iff] at h1
     norm_num at h1
   · -- Show ∀ a b, a * b ∈ I → a ∈ I ∨ b ∈ I
     intro a b hab
     -- Translate ideal membership into the divisibility condition 3 | (re - im)
-    simp only [mem_span_three_one_plus_sqrtd_idx] at hab ⊢
+    simp only [mem_span_three_one_plus_sqrtd_iff] at hab ⊢
     -- Key identity: (a*b).re - (a*b).im = (a.re-a.im)*(b.re-b.im) - 6*a.im*b.im
     have key : (a * b).re - (a * b).im =
         (a.re - a.im) * (b.re - b.im) - 6 * a.im * b.im := by
@@ -337,20 +336,18 @@ theorem isPrime_span_three_one_plus_sqrtd :
       obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
       exact ⟨k1 + k2, by linarith⟩
     -- Since 3 is prime, it divides at least one factor (Euclid's lemma)
-    have h3 : Prime (3 : ℤ) := by
-      exact Int.prime_iff_natAbs_prime.2 (by decide)
-    exact h3.dvd_or_dvd hprod
+    exact int_prime_three.dvd_or_dvd hprod
 
 /-- Primality of `⟨3, 1+√-5⟩` via quotient: `R/I ≅ ZMod 3` is a field. -/
 theorem isPrime_span_three_one_plus_sqrtd' :
     IsPrime (span {3, 1 + sqrtd} : Ideal R) := by
   have hker : RingHom.ker toZMod3Plus = span ({3, 1 + sqrtd} : Set R) := by
-    ext z; rw [RingHom.mem_ker, toZMod3Plus_ker_iff, mem_span_three_one_plus_sqrtd_idx]
+    ext z; rw [RingHom.mem_ker, toZMod3Plus_ker_iff, mem_span_three_one_plus_sqrtd_iff]
   rw [← hker]
   exact (RingHom.ker_isMaximal_of_surjective toZMod3Plus toZMod3Plus_surjective).isPrime
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 - √(-5)} iff 3 divides re + im. -/
-private lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
+private lemma mem_span_three_one_minus_sqrtd_iff (z : R) :
     z ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re + z.im) := by
   constructor
   · -- (⇒) If z = a·3 + b·(1-√-5), extract coordinate equations and show 3 | (re + im)
@@ -381,12 +378,12 @@ theorem isPrime_span_three_one_minus_sqrtd :
   · -- Show I ≠ ⊤: 1 ∉ I since 3 ∤ 1.re + 1.im = 2
     intro h
     have h1 : (1 : R) ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) := by rw [h]; trivial
-    rw [mem_span_three_one_minus_sqrtd_idx] at h1
+    rw [mem_span_three_one_minus_sqrtd_iff] at h1
     norm_num at h1
   · -- Show ∀ a b, a * b ∈ I → a ∈ I ∨ b ∈ I
     intro a b hab
     -- Translate ideal membership into the divisibility condition 3 | (re + im)
-    simp only [mem_span_three_one_minus_sqrtd_idx] at hab ⊢
+    simp only [mem_span_three_one_minus_sqrtd_iff] at hab ⊢
     -- Key identity: (a*b).re + (a*b).im = (a.re+a.im)*(b.re+b.im) - 6*a.im*b.im
     have key : (a * b).re + (a * b).im =
         (a.re + a.im) * (b.re + b.im) - 6 * a.im * b.im := by
@@ -399,16 +396,12 @@ theorem isPrime_span_three_one_minus_sqrtd :
       obtain ⟨k1, hk1⟩ := hab; obtain ⟨k2, hk2⟩ := h6
       exact ⟨k1 + k2, by linarith⟩
     -- Since 3 is prime, it divides at least one factor (Euclid's lemma)
-    have h3 : Prime (3 : ℤ) := by
-      exact Int.prime_iff_natAbs_prime.2 (by decide)
-    exact h3.dvd_or_dvd hprod
+    exact int_prime_three.dvd_or_dvd hprod
 
 /-- Primality of `⟨3, 1-√-5⟩` via quotient: `R/I ≅ ZMod 3` is a field. -/
 theorem isPrime_span_three_one_minus_sqrtd' :
     IsPrime (span {3, 1 - sqrtd} : Ideal R) := by
   have hker : RingHom.ker toZMod3Minus = span ({3, 1 - sqrtd} : Set R) := by
-    ext z; rw [RingHom.mem_ker, toZMod3Minus_ker_iff, mem_span_three_one_minus_sqrtd_idx]
+    ext z; rw [RingHom.mem_ker, toZMod3Minus_ker_iff, mem_span_three_one_minus_sqrtd_iff]
   rw [← hker]
   exact (RingHom.ker_isMaximal_of_surjective toZMod3Minus toZMod3Minus_surjective).isPrime
-
-#lint
