@@ -8,6 +8,9 @@ on:
       - 'blueprint/**'
   pull_request:
     branches: [main]
+    paths:
+      - '**/*.lean'
+      - 'blueprint/**'
   workflow_dispatch:
 
 permissions:
@@ -16,7 +19,7 @@ permissions:
   id-token: write
 
 jobs:
-  blueprint:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -52,13 +55,22 @@ jobs:
           source .venv/bin/activate
           leanblueprint web
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: blueprint/web
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    steps:
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
