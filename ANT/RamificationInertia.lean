@@ -1,6 +1,8 @@
 import ANT.Ideals
 import Mathlib.NumberTheory.RamificationInertia.Basic
-import Mathlib.Tactic
+-- import Mathlib.Tactic
+import Mathlib.RingTheory.DedekindDomain.Ideal.Lemmas
+import Mathlib.NumberTheory.QuadraticField
 
 open Ideal Zsqrtd NumberField
 
@@ -55,7 +57,7 @@ theorem ideal_3_factorization : span {(3 : R)} = P3plus * P3minus :=
 --------------------------------------------------------------------
 -- Computed using mathlib definitions (proofs with sorries)
 --------------------------------------------------------------------
-
+#check Ideal.span_mul_span
 /-- The ramification index of 2 using Ideal.ramificationIdx. -/
 theorem ramificationIdx_2 :
     Ideal.ramificationIdx (algebraMap ℤ R) (Ideal.span {(2 : ℤ)}) P2 = 2 := by
@@ -68,15 +70,34 @@ theorem ramificationIdx_2 :
   · -- Show map(ℤ→R)(2) ⊈ P2^3
     -- If (2) ⊆ P^3, then since (2) = P^2, we'd have P^2 ⊆ P^3
     -- But for a proper prime ideal P, we have P^2 < P^3
-    simp [Ideal.map_span]
+    haveI : IsDedekindDomain R := inferInstance
+    have h_not_top : P2 ≠ ⊤ := Ideal.IsPrime.ne_top inferInstance
+    have h_not_bot : P2 ≠ ⊥ := by
+      -- P2 = span {2, 1+√-5} contains 2, which is nonzero in R
+      apply ne.symm
+      intro h_eq
+      have : (2 : R) ∈ (⊥ : Ideal R) := by simp [P2, h_eq]
+      exact Ideal.mem_bot.mp this
+    -- Now prove ¬span{2} ≤ P2^3
     by_contra h
-    -- Rewrite the left side: span {(2 : R)} = P2^2
-    have h' : span {(2 : R)} ≤ span {(2 : R)}*P2 := by
-      simpa [ideal_2_factorization] using h
-    -- From h' : P2^2 ≤ P2^3, we get P2^2 ≤ P2, contradiction with P2^2 < P2
-    rw [ideal_2_factorization, pow_succ, mul_comm] at h'
-    -- exact (pow_succ_lt_pow P2.isPrime.ne_zero (n := 1)).not_le h'
-    sorry
+    -- Simplify: map (span {2}) = span {2}
+    replace h : span {(2 : R)} ≤ P2 ^ 3 := by
+      simp only [Ideal.map_span, Set.image_singleton] at h
+      exact h
+    -- If span{2} ≤ P2^3, then since span{2} = P2^2, we'd have P2^2 ≤ P2^3
+    -- But for a proper prime ideal, P2^2 < P2^3
+    rw [ideal_2_factorization] at h
+    -- Use the strict decreasing property of powers for a proper prime ideal
+    have := pow_succ_lt_pow inferInstance h_not_bot (i := 1)
+    exact this.2 h
+
+
+
+
+
+
+
+
 
 
 
