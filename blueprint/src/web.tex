@@ -1,0 +1,128 @@
+\documentclass[11pt]{article}
+\usepackage{blueprint}
+
+\title{ANT: Algebraic Number Theory in Lean}
+\author{Formalization Project}
+
+\begin{document}
+
+\maketitle
+
+\section{Definitions}
+
+\begindefinition{R}{def:R}
+  The quadratic integer ring $\mathbb{Z}[\sqrt{-5}]$ used for ideal factorization examples.
+  \lean{../ANT/Basic.lean}
+  \uses{}
+\enddefinition
+
+\begindefinition{isPrime}{def:isPrime}
+  An ideal is prime if it contains only zero divisors and whenever $ab \in I$, either $a \in I$ or $b \in I$.
+  \lean{../ANT/Ideals.lean}
+\enddefinition
+
+\section{Main Theorems}
+
+\begintheorem{factorization\_of\_two}{thm:factorization_of_two}
+  $\langle 2 \rangle = \langle 2, 1 + \sqrt{-5} \rangle^2$ in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endtheorem
+
+\begintheorem{factorization\_of\_three}{thm:factorization_of_three}
+  $\langle 3 \rangle = \langle 3, 1 + \sqrt{-5} \rangle \cdot \langle 3, 1 - \sqrt{-5} \rangle$ in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endtheorem
+
+\begintheorem{factorization\_of\_one\_plus\_sqrtd}{thm:factorization_one_plus}
+  $\langle 1 + \sqrt{-5} \rangle = \langle 2, 1 + \sqrt{-5} \rangle \cdot \langle 3, 1 + \sqrt{-5} \rangle$ in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R, thm:factorization_of_two, thm:factorization_of_three}
+\endtheorem
+
+\begintheorem{factorization\_of\_one\_minus\_sqrtd}{thm:factorization_one_minus}
+  $\langle 1 - \sqrt{-5} \rangle = \langle 2, 1 - \sqrt{-5} \rangle \cdot \langle 3, 1 - \sqrt{-5} \rangle$ in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R, thm:factorization_of_two, thm:factorization_of_three}
+\endtheorem
+
+\begintheorem{ideal\_of\_prime\_norm\_is\_prime}{thm:prime_norm}
+  An ideal whose absolute norm is a prime number is a prime ideal.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+\endtheorem
+
+\begintheorem{isPrime\_span\_two\_one\_plus\_sqrtd}{thm:prime_2_1p}
+  $\langle 2, 1 + \sqrt{-5} \rangle$ is a prime ideal in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endtheorem
+
+\begintheorem{isPrime\_span\_three\_one\_plus\_sqrtd}{thm:prime_3_1p}
+  $\langle 3, 1 + \sqrt{-5} \rangle$ is a prime ideal in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endtheorem
+
+\begintheorem{isPrime\_span\_three\_one\_minus\_sqrtd}{thm:prime_3_1m}
+  $\langle 3, 1 - \sqrt{-5} \rangle$ is a prime ideal in $\mathbb{Z}[\sqrt{-5}]$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endtheorem
+
+\section{Lemmas}
+
+\beginlemma{principal\_eq\_of\_le\_of\_le}{lem:principal_eq}
+  If $I \le J$ and $J \le I$ then $I = J$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+\endlemma
+
+\beginlemma{in\_span\_of\_eq}{lem:in_span}
+  If $x = y$ and $y \in I$, then $x \in I$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+\endlemma
+
+\beginlemma{span\_le\_span\_singleton\_of\_forall\_dvd}{lem:span_le}
+  If $a$ divides every element of $S$, then $\langle S \rangle \le \langle a \rangle$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+\endlemma
+
+\beginlemma{mem\_span\_two\_one\_plus\_sqrtd\_iff}{lem:mem_2_1p}
+  $z \in \langle 2, 1 + \sqrt{-5} \rangle$ iff $z.re + z.im$ is even.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endlemma
+
+\beginlemma{mem\_span\_three\_one\_plus\_iff}{lem:mem_3\_sqrtd_1p}
+  $z \in \langle 3, 1 + \sqrt{-5} \rangle$ iff $3 \mid (z.re - z.im)$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endlemma
+
+\beginlemma{mem\_span\_three\_one\_minus\_sqrtd\_iff}{lem:mem_3_1m}
+  $z \in \langle 3, 1 - \sqrt{-5} \rangle$ iff $3 \mid (z.re + z.im)$.
+  \lean{../ANT/Ideals.lean}
+  \leanok
+  \uses{def:R}
+\endlemma
+
+\nocite{*
+}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}

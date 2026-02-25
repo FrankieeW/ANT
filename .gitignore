@@ -73,3 +73,14 @@ Desktop.ini
 
 ### Git worktrees ###
 .worktrees/
+
+### Blueprint ###
+# Build artifacts
+blueprint/.venv/
+blueprint/src/web/
+blueprint/web/
+blueprint/src/*.paux
+blueprint/src/*.aux
+blueprint/src/*.log
+blueprint/src/*.toc
+blueprint/src/*.out
