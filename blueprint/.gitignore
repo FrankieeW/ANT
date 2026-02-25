@@ -1,0 +1,9 @@
+# Blueprint build artifacts
+blueprint/.venv/
+blueprint/src/web/
+blueprint/web/
+*.paux
+*.aux
+*.log
+*.toc
+*.out
