@@ -1,10 +1,8 @@
 import ANT.Ideals
 import Mathlib.NumberTheory.RamificationInertia.Basic
--- import Mathlib.Tactic
 import Mathlib.RingTheory.DedekindDomain.Ideal.Lemmas
-import Mathlib.NumberTheory.QuadraticField
 
-open Ideal Zsqrtd NumberField
+open Ideal Zsqrtd
 
 -- Note: R is defined in ANT.Ideals
 
@@ -55,56 +53,34 @@ theorem ideal_3_factorization : span {(3 : R)} = P3plus * P3minus :=
 
 
 --------------------------------------------------------------------
--- Computed using mathlib definitions (proofs with sorries)
+-- Computed using mathlib definitions
 --------------------------------------------------------------------
-#check Ideal.span_mul_span
+
 /-- The ramification index of 2 using Ideal.ramificationIdx. -/
 theorem ramificationIdx_2 :
     Ideal.ramificationIdx (algebraMap ℤ R) (Ideal.span {(2 : ℤ)}) P2 = 2 := by
-  -- By definition: ramificationIdx = sup { n | map f p ≤ P^n }
-  -- Since (2)R = P^2, we have pO_K ⊆ P^2
-  -- We need to show pO_K ⊈ P^3
   apply Ideal.ramificationIdx_spec
-  · -- Show map(ℤ→R)(2) ⊆ P2^2
-    simp [Ideal.map_span, ideal_2_factorization]
-  · -- Show map(ℤ→R)(2) ⊈ P2^3
-    -- If (2) ⊆ P^3, then since (2) = P^2, we'd have P^2 ⊆ P^3
-    -- But for a proper prime ideal P, we have P^2 < P^3
-    haveI : IsDedekindDomain R := inferInstance
-    have h_not_top : P2 ≠ ⊤ := Ideal.IsPrime.ne_top inferInstance
-    have h_not_bot : P2 ≠ ⊥ := by
-      -- P2 = span {2, 1+√-5} contains 2, which is nonzero in R
-      apply ne.symm
-      intro h_eq
-      have : (2 : R) ∈ (⊥ : Ideal R) := by simp [P2, h_eq]
-      exact Ideal.mem_bot.mp this
-    -- Now prove ¬span{2} ≤ P2^3
-    by_contra h
-    -- Simplify: map (span {2}) = span {2}
-    replace h : span {(2 : R)} ≤ P2 ^ 3 := by
-      simp only [Ideal.map_span, Set.image_singleton] at h
-      exact h
-    -- If span{2} ≤ P2^3, then since span{2} = P2^2, we'd have P2^2 ≤ P2^3
-    -- But for a proper prime ideal, P2^2 < P2^3
-    rw [ideal_2_factorization] at h
-    -- Use the strict decreasing property of powers for a proper prime ideal
-    have := pow_succ_lt_pow inferInstance h_not_bot (i := 1)
-    exact this.2 h
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  · -- Show map(ℤ→R)(span{2}) ≤ P2^2
+    simp only [Ideal.map_span, Set.image_singleton, map_ofNat]
+    exact le_of_eq ideal_2_factorization
+  · -- Show ¬(map(ℤ→R)(span{2}) ≤ P2^3)
+    simp only [Ideal.map_span, Set.image_singleton, map_ofNat,
+               Ideal.span_singleton_le_iff_mem]
+    -- Need: (2:R) ∉ P2^3
+    -- Key: P2^3 = P2^2 * P2 = span{2} * P2, so 2 ∈ P2^3 → 1 ∈ P2 → P2 = ⊤
+    rw [pow_succ, ← ideal_2_factorization, Ideal.mem_span_singleton_mul]
+    rintro ⟨z, hz, heq⟩
+    -- From 2 * z = 2, extract coordinates to get z = 1
+    have hone : z = 1 := by
+      have hre := congr_arg Zsqrtd.re heq
+      have him := congr_arg Zsqrtd.im heq
+      simp only [Zsqrtd.re_mul, Zsqrtd.im_mul] at hre him
+      norm_num at hre him
+      exact Zsqrtd.ext hre him
+    -- But 1 ∈ P2 contradicts P2 ≠ ⊤
+    rw [hone] at hz
+    have : P2 ≠ ⊤ := Ideal.IsPrime.ne_top (inferInstance : P2.IsPrime)
+    exact this ((Ideal.eq_top_iff_one (I := P2)).mpr hz)
 
 /-- The inertia degree of P2 using Ideal.inertiaDeg. -/
 theorem inertiaDeg_2 : (Ideal.span {(2 : ℤ)}).inertiaDeg P2 = 1 := by
