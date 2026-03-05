@@ -8,7 +8,7 @@ instance instNoZeroDivisors {d : ℤ} [Fact (d < 0)] : NoZeroDivisors (Zsqrtd d)
   eq_zero_or_eq_zero_of_mul_eq_zero := by
     intro a b hab
     have hnorm : Zsqrtd.norm (a * b) = 0 := by
-      simpa [hab] using (Zsqrtd.norm_zero (d := d))
+      simp [hab, Zsqrtd.norm_zero (d := d)]
     have hmulnorm : Zsqrtd.norm a * Zsqrtd.norm b = 0 := by
       simpa [Zsqrtd.norm_mul] using hnorm
     rcases mul_eq_zero.mp hmulnorm with ha | hb
