@@ -11,6 +11,19 @@ open Ideal Zsqrtd
 /-- The working quadratic integer ring `ℤ[√-5]` used in this file. -/
 abbrev R := Zsqrtd (-5)
 
+instance instNoZeroDivisorsR : NoZeroDivisors R where
+  eq_zero_or_eq_zero_of_mul_eq_zero := by
+    intro a b hab
+    have hnorm : Zsqrtd.norm (a * b) = 0 := by
+      simpa [hab] using (Zsqrtd.norm_zero (d := (-5)))
+    have hmulnorm : Zsqrtd.norm a * Zsqrtd.norm b = 0 := by
+      simpa [Zsqrtd.norm_mul] using hnorm
+    rcases mul_eq_zero.mp hmulnorm with ha | hb
+    · exact Or.inl ((Zsqrtd.norm_eq_zero_iff (d := (-5)) (by decide) a).1 ha)
+    · exact Or.inr ((Zsqrtd.norm_eq_zero_iff (d := (-5)) (by decide) b).1 hb)
+
+instance instIsDomainR : IsDomain R := NoZeroDivisors.to_isDomain R
+
 theorem factorization_of_two :
     span {(2 : R)} = (span {2, 1 + sqrtd}) ^ 2 := by
   -- Expand ⟨2, 1+√-5⟩² into the span of the four pairwise products of generators
@@ -150,7 +163,7 @@ theorem ideal_of_prime_norm_is_prime {R : Type*} [CommRing R] [IsDedekindDomain 
   exact hI
 
 /-- An element of ℤ[√-5] belongs to span {2, 1 + √(-5)} iff re + im is even. -/
-private lemma mem_span_two_one_plus_sqrtd_iff (z : R) :
+lemma mem_span_two_one_plus_sqrtd_iff (z : R) :
     z ∈ (span ({2, 1 + sqrtd} : Set R) : Ideal R) ↔ Even (z.re + z.im) := by
   constructor
   · -- (⇒) If z = a·2 + b·(1+√-5), expand coordinates to deduce re+im is even
@@ -205,7 +218,7 @@ theorem isPrime_span_two_one_plus_sqrtd :
     exact Int.even_mul.mp hprod
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 + √(-5)} iff 3 divides re - im. -/
-private lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
+lemma mem_span_three_one_plus_sqrtd_idx (z : R) :
     z ∈ (span ({3, 1 + sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re - z.im) := by
   constructor
   · -- (⇒) If z = a·3 + b·(1+√-5), extract coordinate equations and show 3 | (re - im)
@@ -259,7 +272,7 @@ theorem isPrime_span_three_one_plus_sqrtd :
     exact h3.dvd_or_dvd hprod
 
 /-- An element of ℤ[√-5] belongs to span {3, 1 - √(-5)} iff 3 divides re + im. -/
-private lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
+lemma mem_span_three_one_minus_sqrtd_idx (z : R) :
     z ∈ (span ({3, 1 - sqrtd} : Set R) : Ideal R) ↔ 3 ∣ (z.re + z.im) := by
   constructor
   · -- (⇒) If z = a·3 + b·(1-√-5), extract coordinate equations and show 3 | (re + im)
