@@ -254,6 +254,18 @@ norm_num [Zsqrtd.sqrtd]  -- Normalize square root expressions
 4. **Namespace pollution**: Minimize `open` directives; prefer qualified names
 5. **Slow builds**: Use `lake build` incrementally; avoid touching heavily-imported files
 
+### Worktree Management
+
+- **忽略 `.lake`**: 所有 worktree 共享主分支的 `.lake` 目录。在创建 worktree 后：
+  ```bash
+  # 删除自带的 .lake（如果有）
+  rm -rf .lake
+  
+  # 从主分支创建 symlink 共享构建缓存
+  ln -s ../ANT/.lake .lake
+  ```
+  注意：`.lake` 已在 `.git/info/exclude` 中忽略，无需提交。
+
 ### Documentation
 
 ```lean
